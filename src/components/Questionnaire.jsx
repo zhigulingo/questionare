@@ -310,7 +310,12 @@ export default function Questionnaire() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showContactForm, setShowContactForm] = useState(false);
 
+  // Send close event to parent (portfolio page)
   const closeQuestionnaire = () => {
+    if (window.parent !== window) {
+      window.parent.postMessage('questionare:close', '*');
+    }
+    // Also reset local state (if opened standalone)
     setCurrentStep(0);
     setAnswers({});
     setContactInfo({ email: '', additional: '' });
@@ -404,14 +409,18 @@ export default function Questionnaire() {
     if (error) console.error('Supabase error:', error);
 
     setIsCompleted(true);
+    // After 2.5s show Thank You, then close popup in parent
     setTimeout(() => {
+      if (window.parent !== window) {
+        window.parent.postMessage('questionare:close', '*');
+      }
       setCurrentStep(0);
       setAnswers({});
       setContactInfo({ email: '', additional: '' });
       setAgreed(false);
       setIsCompleted(false);
       setShowContactForm(false);
-    }, 2000);
+    }, 2500);
   };
 
   const totalSteps = 6;
@@ -487,34 +496,7 @@ export default function Questionnaire() {
                 </div>
               )}
             </div>
-            <div className="relative">
-              <motion.button
-                onClick={closeQuestionnaire}
-                onMouseEnter={() => setShowCloseTooltip(true)}
-                onMouseLeave={() => setShowCloseTooltip(false)}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors duration-200"
-              >
-                <XMarkIcon className="w-5 h-5 text-gray-600" />
-              </motion.button>
-              <AnimatePresence>
-                {showCloseTooltip && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10, scale: 0.8 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 10, scale: 0.8 }}
-                    transition={{ type: "spring", damping: 20, stiffness: 300 }}
-                    className="absolute top-full right-1/2 transform translate-x-1/2 mt-2 z-50"
-                  >
-                    <div className="bg-gray-900 text-white px-3 py-2 rounded-lg text-sm font-medium shadow-lg whitespace-nowrap">
-                      {t.closeQuestionnaire}
-                      <div className="absolute bottom-full right-1/2 transform translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent border-b-gray-900"></div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+            {/* No close button inside iframe — parent page handles it */}
           </div>
 
           {!showContactForm && !isCompleted && (
