@@ -1,6 +1,12 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircleIcon, FlagIcon, ChevronLeftIcon, XMarkIcon } from '@heroicons/react/24/solid';
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_ANON_KEY
+);
 
 const questions = [
   {
@@ -366,12 +372,43 @@ export default function Questionnaire() {
     }, 300);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log({ answers, contactInfo });
+
+    // Формируем данные из ответов
+    const getSelected = (qId) => {
+      const ans = answers[qId];
+      if (!ans) return null;
+      if (typeof ans === 'object') {
+        return Object.entries(ans).filter(([,v]) => v).map(([k]) => {
+          const q = questions.find(q => q.id === qId);
+          const opt = q?.options?.find(o => o.id === k);
+          return opt?.text || k;
+        });
+      }
+      const q = questions.find(q => q.id === qId);
+      const opt = q?.options?.find(o => o.id === ans);
+      return opt?.text || ans;
+    };
+
+    const payload = {
+      email: contactInfo.email,
+      additional: contactInfo.additional || null,
+      format: getSelected(1),
+      goal: getSelected(2),
+      field: getSelected(3),
+      deadline: getSelected(5),
+      materials: getSelected(6),
+      budget: getSelected(7),
+    };
+
+    const { error } = await supabase.from('portfolio_contacts').insert([payload]);
+    if (error) {
+      console.error('Supabase error:', error);
+    }
+
     setIsCompleted(true);
     setTimeout(() => {
-      // Reset questionnaire instead of closing
       setCurrentStep(0);
       setAnswers({});
       setContactInfo({ email: '', additional: '' });
