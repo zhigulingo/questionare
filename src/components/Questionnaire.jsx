@@ -496,7 +496,35 @@ export default function Questionnaire() {
                 </div>
               )}
             </div>
-            {/* No close button inside iframe — parent page handles it */}
+            {/* Close button — sends postMessage to parent to close popup */}
+            <div className="relative">
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={closeQuestionnaire}
+                onMouseEnter={() => setShowCloseTooltip(true)}
+                onMouseLeave={() => setShowCloseTooltip(false)}
+                className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors duration-200"
+              >
+                <XMarkIcon className="w-5 h-5 text-gray-600" />
+              </motion.button>
+              <AnimatePresence>
+                {showCloseTooltip && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10, scale: 0.8 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.8 }}
+                    transition={{ type: "spring", damping: 20, stiffness: 300 }}
+                    className="absolute top-full right-0 mt-2 z-50"
+                  >
+                    <div className="bg-gray-900 text-white px-3 py-2 rounded-lg text-sm font-medium shadow-lg whitespace-nowrap">
+                      {t.closeQuestionnaire}
+                      <div className="absolute bottom-full right-4 w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent border-b-gray-900"></div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
 
           {!showContactForm && !isCompleted && (
